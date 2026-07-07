@@ -1,0 +1,26 @@
+{
+  "name": "orbit-workspace-engine",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --filter @orbit/web dev",
+    "dev:all": "bash scripts/dev-all.sh",
+    "docker": "bash scripts/compose.sh",
+    "docker:up": "bash scripts/compose.sh up -d",
+    "docker:up:relay-off": "bash scripts/compose.sh --relay-off up -d postgres redis gateway web",
+    "docker:relay": "bash scripts/compose.sh --relay-off rm -f relay 2>/dev/null; bash scripts/compose.sh --relay-off up -d relay",
+    "docker:down": "bash scripts/compose.sh down",
+    "build": "pnpm -r --filter @orbit/web --filter @orbit/relay build",
+    "test": "pnpm -r test && dotnet test services/gateway/Orbit.Gateway.sln",
+    "test:collab": "node scripts/test-collab.mjs",
+    "test:sync": "node scripts/test-sync.mjs",
+    "lint": "pnpm -r lint"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "devDependencies": {
+    "y-websocket": "^2.0.4",
+    "yjs": "^13.6.24"
+  },
+  "packageManager": "pnpm@9.15.0+sha512.76e2379760a4328ec4415815bcd6628dee727af3779aaa4c914e3944156c4299921a89f976381ee107d41f12cfa4b66681ca9c718f0668fa0831ed4c6d8ba56c"
+}
