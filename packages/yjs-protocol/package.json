@@ -1,0 +1,32 @@
+{
+  "name": "@orbit/yjs-protocol",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./ticket": {
+      "types": "./dist/ticket.d.ts",
+      "default": "./dist/ticket.js"
+    }
+  },
+  "scripts": {
+    "build": "pnpm --filter @orbit/shared-types build && tsc -p tsconfig.json",
+    "test": "vitest run",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@orbit/shared-types": "workspace:*",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.7",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  }
+}
