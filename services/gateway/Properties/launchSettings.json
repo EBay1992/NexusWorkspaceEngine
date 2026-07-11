@@ -1,0 +1,15 @@
+{
+  "profiles": {
+    "Orbit.Gateway": {
+      "commandName": "Project",
+      "applicationUrl": "http://localhost:5080",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "DATABASE_URL": "postgresql://orbit:orbit@localhost:5432/orbit",
+        "JWT_SIGNING_KEY": "dev-signing-key-32-bytes-minimum!!",
+        "RELAY_WS_URL": "ws://localhost:1234/orbit",
+        "NEXT_PUBLIC_APP_URL": "http://localhost:3000"
+      }
+    }
+  }
+}
