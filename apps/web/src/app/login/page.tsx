@@ -1,0 +1,36 @@
+'use client';
+
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+import { LoginForm } from '@/components/auth/LoginForm';
+import { useAuthStore } from '@/stores/auth-store';
+
+export default function LoginPage() {
+  const router = useRouter();
+  const status = useAuthStore((s) => s.status);
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      router.replace('/workspaces');
+    }
+  }, [router, status]);
+
+  return (
+    <main className="flex min-h-screen flex-col items-center justify-center gap-8 p-8">
+      <div className="max-w-sm space-y-2 text-center">
+        <p className="text-xs uppercase tracking-widest text-muted-foreground">Orbit</p>
+        <h1 className="text-3xl font-semibold tracking-tight">Sign in</h1>
+        <p className="text-sm text-muted-foreground">
+          Authenticate with the gateway to access workspaces, relay tickets, and snapshots.
+        </p>
+      </div>
+
+      <LoginForm />
+
+      <Link href="/" className="text-xs text-muted-foreground hover:text-foreground">
+        Back to home
+      </Link>
+    </main>
+  );
+}
