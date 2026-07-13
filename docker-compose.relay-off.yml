@@ -1,0 +1,10 @@
+# Use with: docker compose -f docker-compose.yml -f docker-compose.relay-off.yml up -d postgres redis gateway web
+# Start relay later: pnpm docker:relay
+#
+# Starts postgres, redis, gateway, and web without the relay — for offline/reconnect testing.
+
+services:
+  web:
+    depends_on: !reset
+      gateway:
+        condition: service_healthy
