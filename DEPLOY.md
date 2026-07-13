@@ -1,14 +1,39 @@
 # Deploy on Render
 
-1. Open [Render Dashboard](https://dashboard.render.com/) and connect the GitHub repo `EBay1992/NexusWorkspaceEngine`.
-2. **New → Blueprint** and select this repository. Render reads `render.yaml` at the repo root.
-3. After the first deploy, open each service in Render and add custom domains:
-   - `nexus-orbit-web` → `nexus.ehsanbayranvand.tech`
-   - `nexus-orbit-gateway` → `api.nexus.ehsanbayranvand.tech`
-   - `nexus-orbit-relay` → `relay.nexus.ehsanbayranvand.tech`
-4. In Cloudflare, create **CNAME** records to the targets Render shows for each custom domain. Use **DNS only** (grey cloud) so WebSockets work reliably.
-5. Copy the generated `ADMIN_PASSWORD` from the `nexus-orbit-gateway` service environment in Render. Sign in at `https://nexus.ehsanbayranvand.tech/login` with:
-   - Email: `admin@ehsanbayranvand.tech`
-   - Password: value of `ADMIN_PASSWORD`
+## CLI setup (one-time)
 
-Services use Docker images from this monorepo. The gateway applies `services/gateway/Sql/schema.sql` on startup and creates the `main` workspace for the admin user.
+```bash
+brew install render
+render login
+render workspace set "Ehsan's workspace"
+```
+
+Connect GitHub at [Render Dashboard → Account Settings](https://dashboard.render.com/) if not already linked (repo: [EBay1992/NexusWorkspaceEngine](https://github.com/EBay1992/NexusWorkspaceEngine)).
+
+## Provision stack
+
+```bash
+# Validate blueprint (optional)
+render blueprints validate render.yaml
+
+# Create Postgres + three Docker web services from GitHub
+bash scripts/render-provision.sh
+```
+
+Generated credentials are written to `.render-local/secrets.env` (gitignored).
+
+## Custom domains (Cloudflare)
+
+After services deploy, point DNS to Render (grey cloud / DNS only):
+
+| Host | Service | Render dashboard |
+|------|---------|------------------|
+| `nexus.ehsanbayranvand.tech` | `nexus-orbit-web` | [web](https://dashboard.render.com/web/srv-d9ailto458ps739os560) |
+| `api.nexus.ehsanbayranvand.tech` | `nexus-orbit-gateway` | [gateway](https://dashboard.render.com/web/srv-d9ails6rnols73b52d2g) |
+| `relay.nexus.ehsanbayranvand.tech` | `nexus-orbit-relay` | [relay](https://dashboard.render.com/web/srv-d9ailstaeets73e39e7g) |
+
+Sign in at `https://nexus.ehsanbayranvand.tech/login` with `admin@ehsanbayranvand.tech` and the `ADMIN_PASSWORD` from `.render-local/secrets.env` or the gateway service env in Render.
+
+## Blueprint alternative
+
+You can also use **New → Blueprint** in the [Render Dashboard](https://dashboard.render.com/) and select this repo; Render reads `render.yaml` at the root.

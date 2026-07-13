@@ -1,4 +1,5 @@
 using Dapper;
+using Microsoft.Extensions.Options;
 using Npgsql;
 using Orbit.Gateway.Configuration;
 using Orbit.Gateway.Data;
@@ -9,14 +10,14 @@ namespace Orbit.Gateway.Hosting;
 /// Applies schema.sql on startup and optionally seeds the admin account from env vars.
 /// </summary>
 public sealed class DatabaseBootstrap(
-    GatewayOptions options,
+    IOptions<GatewayOptions> options,
     ILogger<DatabaseBootstrap> logger) : IHostedService
 {
     private static readonly Guid AdminUserId = Guid.Parse("11111111-1111-1111-1111-111111111111");
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        var connectionString = ConnectionStringHelper.ToNpgsql(options.DatabaseUrl);
+        var connectionString = ConnectionStringHelper.ToNpgsql(options.Value.DatabaseUrl);
         await using var connection = new NpgsqlConnection(connectionString);
         await connection.OpenAsync(cancellationToken);
 
