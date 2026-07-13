@@ -5,7 +5,6 @@ import {
   fetchCurrentUser,
   getStoredAccessToken,
   login as gatewayLogin,
-  storeAccessToken,
   type AuthUser,
 } from '@/lib/gateway/client';
 

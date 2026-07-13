@@ -31,10 +31,10 @@ export function useCollaborationPresence(
   localEmail: string | null | undefined,
 ): CollaborationPeer[] {
   const [peers, setPeers] = useState<CollaborationPeer[]>([]);
+  const active = Boolean(provider && localEmail);
 
   useEffect(() => {
     if (!provider || !localEmail) {
-      setPeers([]);
       return;
     }
 
@@ -70,5 +70,6 @@ export function useCollaborationPresence(
     };
   }, [localEmail, provider]);
 
+  if (!active) return [];
   return peers;
 }
