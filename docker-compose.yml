@@ -10,6 +10,7 @@ services:
     volumes:
       - orbit_pg_data:/var/lib/postgresql/data
       - ./services/gateway/Sql/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./services/gateway/Sql/seed-dev.sql:/docker-entrypoint-initdb.d/02-seed-dev.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U orbit -d orbit"]
       interval: 5s

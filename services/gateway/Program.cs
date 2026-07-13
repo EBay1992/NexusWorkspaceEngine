@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using Orbit.Gateway.Configuration;
 using Orbit.Gateway.Data;
 using Orbit.Gateway.Endpoints;
+using Orbit.Gateway.Hosting;
 using Orbit.Gateway.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -39,6 +40,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IWorkspaceAuthorizationService, WorkspaceAuthorizationService>();
 builder.Services.AddSingleton<IWsTicketService, WsTicketService>();
 builder.Services.AddSingleton<ISnapshotIngestionService, SnapshotIngestionService>();
+builder.Services.AddHostedService<DatabaseBootstrap>();
 builder.Services.AddHostedService<SnapshotWorker>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

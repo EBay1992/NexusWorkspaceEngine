@@ -26,7 +26,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): RelayConfig {
 
   return {
     host: env.RELAY_HOST ?? '0.0.0.0',
-    port: Number(env.RELAY_PORT ?? 1234),
+    port: Number(env.PORT ?? env.RELAY_PORT ?? 1234),
     signingKey,
     devNoAuth: toBool(env.RELAY_DEV_NO_AUTH, !isProduction),
     redisEnabled: toBool(env.RELAY_REDIS_ENABLED, false),

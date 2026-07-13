@@ -6,12 +6,6 @@ import { Button } from '@/components/ui/button';
 import { useCollaborationPresence } from '@/hooks/use-collaboration-presence';
 import { cn } from '@/lib/utils';
 
-const TEST_ACCOUNTS = [
-  { email: 'demo@orbit.local', password: 'demo', role: 'owner' },
-  { email: 'editor@orbit.local', password: 'demo', role: 'editor' },
-  { email: 'viewer@orbit.local', password: 'demo', role: 'viewer' },
-] as const;
-
 interface CollaborationBarProps {
   workspaceId: string;
   workspaceTitle?: string;
@@ -37,7 +31,6 @@ export function CollaborationBar({
 }: CollaborationBarProps) {
   const peers = useCollaborationPresence(syncProvider, localEmail);
   const [copied, setCopied] = useState(false);
-  const [showGuide, setShowGuide] = useState(false);
 
   const shareUrl =
     typeof window !== 'undefined'
@@ -62,7 +55,7 @@ export function CollaborationBar({
         <div className="min-w-0">
           <p className="font-medium truncate">{workspaceTitle ?? workspaceId}</p>
           <p className="text-muted-foreground">
-            Same URL = same document. Invite teammates to sign in, then open this workspace.
+            Share the workspace link with teammates who have access.
           </p>
         </div>
 
@@ -111,43 +104,7 @@ export function CollaborationBar({
             View-only — edits are disabled on this account.
           </span>
         )}
-
-        {process.env.NODE_ENV === 'development' && (
-          <Button
-            size="sm"
-            variant="ghost"
-            className="ml-auto"
-            onClick={() => setShowGuide((open) => !open)}
-          >
-            {showGuide ? 'Hide test guide' : 'Collab test guide'}
-          </Button>
-        )}
       </div>
-
-      {showGuide && process.env.NODE_ENV === 'development' && (
-        <div className="mt-3 grid gap-3 rounded-md border border-dashed border-border bg-muted/30 p-3 md:grid-cols-2">
-          <div>
-            <p className="mb-1 font-medium">Test accounts (password: demo)</p>
-            <ul className="space-y-1 text-muted-foreground">
-              {TEST_ACCOUNTS.map((account) => (
-                <li key={account.email}>
-                  <span className="font-mono text-foreground">{account.email}</span> — {account.role}
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <p className="mb-1 font-medium">Edge cases to exercise</p>
-            <ol className="list-decimal space-y-1 pl-4 text-muted-foreground">
-              <li>Use two different browsers (not two Chrome tabs — BroadcastChannel bypasses relay).</li>
-              <li>Owner + editor: drag/type concurrently; both should converge via CRDT.</li>
-              <li>Viewer: canvas is read-only; snapshot upload returns 403 from gateway.</li>
-              <li>Relay off: <code className="font-mono">pnpm docker:up:relay-off</code>, edit offline, then <code className="font-mono">pnpm docker:relay</code>.</li>
-              <li>Run <code className="font-mono">pnpm test:collab</code> for automated multi-user smoke tests.</li>
-            </ol>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

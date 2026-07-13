@@ -14,7 +14,6 @@ FROM mcr.microsoft.com/dotnet/aspnet:9.0-alpine AS runner
 WORKDIR /app
 
 ENV DOTNET_GCHeapHardLimit=0x10000000
-ENV ASPNETCORE_URLS=http://0.0.0.0:5080
 
 RUN apk add --no-cache wget \
   && addgroup -S orbit && adduser -S orbit -G orbit
@@ -24,7 +23,4 @@ COPY --from=build /app/publish .
 
 EXPOSE 5080
 
-HEALTHCHECK --interval=10s --timeout=3s --start-period=10s --retries=5 \
-  CMD wget -qO- http://127.0.0.1:5080/health || exit 1
-
-ENTRYPOINT ["dotnet", "Orbit.Gateway.dll"]
+ENTRYPOINT ["sh", "-c", "export ASPNETCORE_URLS=http://0.0.0.0:${PORT:-5080} && exec dotnet Orbit.Gateway.dll"]

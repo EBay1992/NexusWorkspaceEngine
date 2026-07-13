@@ -42,6 +42,7 @@ done
 
 echo "==> Applying gateway schema..."
 docker compose exec -T postgres psql -U orbit -d orbit < services/gateway/Sql/schema.sql >/dev/null 2>&1 || true
+docker compose exec -T postgres psql -U orbit -d orbit < services/gateway/Sql/seed-dev.sql >/dev/null 2>&1 || true
 
 echo "==> Starting gateway (http://localhost:5080)..."
 (
@@ -74,7 +75,7 @@ trap cleanup EXIT INT TERM
 
 echo ""
 echo "Orbit dev stack running:"
-echo "  Web:     http://localhost:3000/workspace/demo"
+echo "  Web:     http://localhost:3000/workspaces"
 echo "  Gateway: http://localhost:5080/health"
 echo "  Relay:   http://localhost:${RELAY_PORT}/health"
 echo ""

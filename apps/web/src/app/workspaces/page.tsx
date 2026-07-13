@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import { AuthNav } from '@/components/auth/AuthNav';
-import { Button } from '@/components/ui/button';
 import { listWorkspaces, type WorkspaceListItem } from '@/lib/gateway/client';
 import { useAuthStore } from '@/stores/auth-store';
 
@@ -68,11 +67,6 @@ export default function WorkspacesPage() {
           </ul>
         )}
 
-        {workspaces.some((workspace) => workspace.id === 'demo') ? (
-          <Link href="/workspace/demo">
-            <Button variant="outline">Open demo workspace</Button>
-          </Link>
-        ) : null}
       </main>
     </AuthGuard>
   );

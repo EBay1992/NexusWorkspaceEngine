@@ -1,0 +1,77 @@
+# Render Blueprint — https://dashboard.render.com/
+# Connect this repo, then: New > Blueprint > select repository.
+
+databases:
+  - name: nexus-orbit-db
+    databaseName: orbit
+    user: orbit
+    plan: free
+    region: frankfurt
+
+services:
+  - type: web
+    name: nexus-orbit-gateway
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: services/gateway/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: nexus-orbit-db
+          property: connectionString
+      - key: JWT_SIGNING_KEY
+        generateValue: true
+      - key: NEXT_PUBLIC_APP_URL
+        value: https://nexus.ehsanbayranvand.tech
+      - key: RELAY_WS_URL
+        value: wss://relay.nexus.ehsanbayranvand.tech/orbit
+      - key: ADMIN_EMAIL
+        value: admin@ehsanbayranvand.tech
+      - key: ADMIN_PASSWORD
+        generateValue: true
+
+  - type: web
+    name: nexus-orbit-relay
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: apps/relay/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: JWT_SIGNING_KEY
+        fromService:
+          type: web
+          name: nexus-orbit-gateway
+          envVarKey: JWT_SIGNING_KEY
+      - key: RELAY_HOST
+        value: 0.0.0.0
+      - key: RELAY_DEV_NO_AUTH
+        value: "false"
+      - key: RELAY_REDIS_ENABLED
+        value: "false"
+      - key: NODE_ENV
+        value: production
+
+  - type: web
+    name: nexus-orbit-web
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: apps/web/Dockerfile
+    dockerContext: .
+    healthCheckPath: /
+    envVars:
+      - key: NEXT_PUBLIC_APP_URL
+        value: https://nexus.ehsanbayranvand.tech
+      - key: NEXT_PUBLIC_GATEWAY_URL
+        value: https://api.nexus.ehsanbayranvand.tech
+      - key: NEXT_PUBLIC_RELAY_WS_URL
+        value: wss://relay.nexus.ehsanbayranvand.tech/orbit
+      - key: NODE_ENV
+        value: production
+      - key: HOSTNAME
+        value: 0.0.0.0

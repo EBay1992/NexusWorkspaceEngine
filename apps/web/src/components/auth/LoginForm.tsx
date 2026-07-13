@@ -10,8 +10,8 @@ import { useAuthStore } from '@/stores/auth-store';
 export function LoginForm() {
   const router = useRouter();
   const login = useAuthStore((s) => s.login);
-  const [email, setEmail] = useState('demo@orbit.local');
-  const [password, setPassword] = useState('demo');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -66,10 +66,6 @@ export function LoginForm() {
       <Button type="submit" className="w-full" disabled={submitting}>
         {submitting ? 'Signing in…' : 'Sign in'}
       </Button>
-
-      <p className="text-center text-xs text-muted-foreground">
-        Dev account: <code>demo@orbit.local</code> / <code>demo</code>
-      </p>
     </form>
   );
 }

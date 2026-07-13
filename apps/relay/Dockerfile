@@ -26,7 +26,6 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NODE_OPTIONS=--max-old-space-size=256
 ENV RELAY_HOST=0.0.0.0
-ENV RELAY_PORT=1234
 
 RUN apk add --no-cache wget
 
@@ -45,8 +44,5 @@ RUN pnpm install --frozen-lockfile --prod --filter @orbit/relay...
 
 USER node
 EXPOSE 1234
-
-HEALTHCHECK --interval=10s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget -qO- http://127.0.0.1:1234/health || exit 1
 
 CMD ["node", "apps/relay/dist/index.js"]
