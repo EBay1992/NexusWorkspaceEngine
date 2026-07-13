@@ -112,11 +112,3 @@ apps/relay/        Fastify + ws relay
 services/gateway/  ASP.NET Core 9 minimal API
 packages/          shared-types, yjs-protocol
 ```
-
-## Resume highlights
-
-When all phases are complete:
-
-1. **Local-first CRDT canvas** — Y.js + IndexedDB, offline drag/edit
-2. **Dual-service architecture** — Node relay (binary broadcast) + ASP.NET gateway (RBAC + batch persistence)
-3. **Free-tier optimization** — Docker images target <256MB per service, stateless relay, zero server-side merge
