@@ -10,10 +10,11 @@
     "docker:relay": "bash scripts/compose.sh --relay-off rm -f relay 2>/dev/null; bash scripts/compose.sh --relay-off up -d relay",
     "docker:down": "bash scripts/compose.sh down",
     "build": "pnpm -r --filter @orbit/web --filter @orbit/relay build",
-    "test": "pnpm -r test && dotnet test services/gateway/Orbit.Gateway.sln",
+    "build:packages": "pnpm --filter @orbit/shared-types build && pnpm --filter @orbit/yjs-protocol build",
+    "test": "pnpm run build:packages && pnpm -r test && dotnet test services/gateway/Orbit.Gateway.sln",
     "test:collab": "node scripts/test-collab.mjs",
     "test:sync": "node scripts/test-sync.mjs",
-    "lint": "pnpm -r lint"
+    "lint": "pnpm run build:packages && pnpm -r lint"
   },
   "engines": {
     "node": ">=22"
