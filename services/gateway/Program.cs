@@ -77,6 +77,7 @@ app.UseAuthorization();
 app.MapHealthEndpoints();
 app.MapAuthEndpoints();
 app.MapWorkspaceEndpoints();
+app.MapJoinEndpoints();
 
 app.Run();
 

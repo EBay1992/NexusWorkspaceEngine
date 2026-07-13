@@ -1,5 +1,8 @@
 using System.Security.Claims;
+using Microsoft.Extensions.Options;
+using Orbit.Gateway.Configuration;
 using Orbit.Gateway.Data;
+using Orbit.Gateway.Models;
 using Orbit.Gateway.Services;
 
 namespace Orbit.Gateway.Endpoints;
@@ -44,6 +47,36 @@ public static class AuthEndpoints
         return Guid.TryParse(sub, out var userId) ? userId : null;
     }
 }
+
+public static class RoleParse
+{
+    public static bool TryParse(string? role, out WorkspaceRole parsed)
+    {
+        parsed = default;
+        if (string.IsNullOrWhiteSpace(role)) return false;
+        try
+        {
+            parsed = WorkspaceRoles.Parse(role.Trim().ToLowerInvariant());
+            return true;
+        }
+        catch (ArgumentOutOfRangeException)
+        {
+            return false;
+        }
+    }
+
+    public static string Name(WorkspaceRole role) => role switch
+    {
+        WorkspaceRole.Owner => WorkspaceRoles.Owner,
+        WorkspaceRole.Editor => WorkspaceRoles.Editor,
+        WorkspaceRole.Viewer => WorkspaceRoles.Viewer,
+        _ => throw new ArgumentOutOfRangeException(nameof(role)),
+    };
+}
+
+public sealed record CreateMemberRequest(string Email, string Password, string Role);
+
+public sealed record CreateShareLinkRequest(string Role);
 
 public static class WorkspaceEndpoints
 {
@@ -116,6 +149,148 @@ public static class WorkspaceEndpoints
             return Results.Accepted(value: new { accepted = true });
         });
 
+        group.MapGet("/{workspaceId}/members", async (
+            string workspaceId,
+            ClaimsPrincipal user,
+            IWorkspaceAuthorizationService authorization,
+            IWorkspaceRepository repository,
+            CancellationToken cancellationToken) =>
+        {
+            var userId = AuthEndpoints.GetUserIdFromPrincipal(user);
+            if (userId is null) return Results.Unauthorized();
+            if (!await authorization.CanAdminAsync(workspaceId, userId.Value, cancellationToken))
+            {
+                return Results.Forbid();
+            }
+
+            var members = await repository.ListMembersAsync(workspaceId, cancellationToken);
+            return Results.Ok(members);
+        });
+
+        group.MapPost("/{workspaceId}/members", async (
+            string workspaceId,
+            CreateMemberRequest body,
+            ClaimsPrincipal user,
+            IWorkspaceAuthorizationService authorization,
+            IWorkspaceRepository repository,
+            CancellationToken cancellationToken) =>
+        {
+            var userId = AuthEndpoints.GetUserIdFromPrincipal(user);
+            if (userId is null) return Results.Unauthorized();
+            if (!await authorization.CanAdminAsync(workspaceId, userId.Value, cancellationToken))
+            {
+                return Results.Forbid();
+            }
+
+            if (string.IsNullOrWhiteSpace(body.Email) || string.IsNullOrWhiteSpace(body.Password))
+            {
+                return Results.BadRequest(new { error = "email and password are required" });
+            }
+
+            if (!RoleParse.TryParse(body.Role, out var role) || role == WorkspaceRole.Owner)
+            {
+                return Results.BadRequest(new { error = "role must be editor or viewer" });
+            }
+
+            if (!await repository.WorkspaceExistsAsync(workspaceId, cancellationToken))
+            {
+                return Results.NotFound(new { error = "workspace not found" });
+            }
+
+            var email = body.Email.Trim().ToLowerInvariant();
+            var existing = await repository.FindUserByEmailAsync(email, cancellationToken);
+            var memberUser = existing ?? await repository.CreateUserAsync(email, body.Password, cancellationToken);
+
+            await repository.UpsertMembershipAsync(workspaceId, memberUser.Id, role, cancellationToken);
+            return Results.Ok(new { userId = memberUser.Id, email = memberUser.Email, role = RoleParse.Name(role) });
+        });
+
+        group.MapGet("/{workspaceId}/share-links", async (
+            string workspaceId,
+            ClaimsPrincipal user,
+            IWorkspaceAuthorizationService authorization,
+            IWorkspaceRepository repository,
+            CancellationToken cancellationToken) =>
+        {
+            var userId = AuthEndpoints.GetUserIdFromPrincipal(user);
+            if (userId is null) return Results.Unauthorized();
+            if (!await authorization.CanAdminAsync(workspaceId, userId.Value, cancellationToken))
+            {
+                return Results.Forbid();
+            }
+
+            var links = await repository.ListActiveShareLinksAsync(workspaceId, cancellationToken);
+            return Results.Ok(links.Select(l => new { id = l.Id, role = l.Role, createdAt = l.CreatedAt }));
+        });
+
+        group.MapPost("/{workspaceId}/share-links", async (
+            string workspaceId,
+            CreateShareLinkRequest body,
+            ClaimsPrincipal user,
+            IWorkspaceAuthorizationService authorization,
+            IWorkspaceRepository repository,
+            IOptions<GatewayOptions> gatewayOptions,
+            CancellationToken cancellationToken) =>
+        {
+            var userId = AuthEndpoints.GetUserIdFromPrincipal(user);
+            if (userId is null) return Results.Unauthorized();
+            if (!await authorization.CanAdminAsync(workspaceId, userId.Value, cancellationToken))
+            {
+                return Results.Forbid();
+            }
+
+            if (!RoleParse.TryParse(body.Role, out var role) || role == WorkspaceRole.Owner)
+            {
+                return Results.BadRequest(new { error = "role must be editor or viewer" });
+            }
+
+            if (!await repository.WorkspaceExistsAsync(workspaceId, cancellationToken))
+            {
+                return Results.NotFound(new { error = "workspace not found" });
+            }
+
+            var (id, rawToken) = await repository.CreateOrRotateShareLinkAsync(
+                workspaceId,
+                role,
+                userId.Value,
+                cancellationToken);
+
+            var path = $"/join/{Uri.EscapeDataString(workspaceId)}/{RoleParse.Name(role)}/{Uri.EscapeDataString(rawToken)}";
+            var appOrigin = gatewayOptions.Value.WebOrigin.TrimEnd('/');
+            return Results.Ok(new
+            {
+                id,
+                role = RoleParse.Name(role),
+                path,
+                url = $"{appOrigin}{path}",
+                note = "Previous share links for this role are now invalid.",
+            });
+        });
+
+        group.MapDelete("/{workspaceId}/share-links/{role}", async (
+            string workspaceId,
+            string role,
+            ClaimsPrincipal user,
+            IWorkspaceAuthorizationService authorization,
+            IWorkspaceRepository repository,
+            CancellationToken cancellationToken) =>
+        {
+            var userId = AuthEndpoints.GetUserIdFromPrincipal(user);
+            if (userId is null) return Results.Unauthorized();
+            if (!await authorization.CanAdminAsync(workspaceId, userId.Value, cancellationToken))
+            {
+                return Results.Forbid();
+            }
+
+            if (!RoleParse.TryParse(role, out var parsed) || parsed == WorkspaceRole.Owner)
+            {
+                return Results.BadRequest(new { error = "role must be editor or viewer" });
+            }
+
+            await repository.RevokeShareLinkAsync(workspaceId, parsed, cancellationToken);
+            return Results.NoContent();
+        });
+
         return app;
     }
 
@@ -137,6 +312,44 @@ public static class WorkspaceEndpoints
 
         var ticket = ticketService.IssueTicket(userId.Value.ToString(), workspaceId, scopeId);
         return Results.Ok(ticket);
+    }
+}
+
+public static class JoinEndpoints
+{
+    public static IEndpointRouteBuilder MapJoinEndpoints(this IEndpointRouteBuilder app)
+    {
+        app.MapPost("/api/join/{workspaceId}/{role}/{token}", async (
+            string workspaceId,
+            string role,
+            string token,
+            ClaimsPrincipal user,
+            IWorkspaceRepository repository,
+            CancellationToken cancellationToken) =>
+        {
+            var userId = AuthEndpoints.GetUserIdFromPrincipal(user);
+            if (userId is null) return Results.Unauthorized();
+
+            if (!RoleParse.TryParse(role, out var parsed) || parsed == WorkspaceRole.Owner)
+            {
+                return Results.BadRequest(new { error = "invalid role in share link" });
+            }
+
+            var link = await repository.FindActiveShareLinkAsync(workspaceId, parsed, token, cancellationToken);
+            if (link is null)
+            {
+                return Results.NotFound(new { error = "Share link is invalid or has been revoked." });
+            }
+
+            await repository.UpsertMembershipAsync(workspaceId, userId.Value, link.Value.Role, cancellationToken);
+            return Results.Ok(new
+            {
+                workspaceId = link.Value.WorkspaceId,
+                role = RoleParse.Name(link.Value.Role),
+            });
+        }).RequireAuthorization();
+
+        return app;
     }
 }
 

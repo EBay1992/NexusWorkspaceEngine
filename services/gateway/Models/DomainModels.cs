@@ -28,4 +28,15 @@ public sealed record WorkspaceMemberRecord(string WorkspaceId, Guid UserId, Work
 
 public sealed record WorkspaceSummary(string Id, string Title, string Role);
 
+public sealed record WorkspaceMemberListItem(Guid UserId, string Email, string Role);
+
+public sealed record WorkspaceShareLinkRecord(
+    Guid Id,
+    string WorkspaceId,
+    WorkspaceRole Role,
+    string TokenHash,
+    Guid CreatedBy,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset? RevokedAt);
+
 public sealed record SnapshotInsert(string WorkspaceId, string ScopeId, byte[] Payload, Guid UserId);

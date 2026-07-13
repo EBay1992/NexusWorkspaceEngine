@@ -19,6 +19,7 @@ import { connectSync, type SyncHandle } from '@/lib/yjs/sync-provider';
 import { useCanvasStore } from '@/stores/canvas-store';
 import { WorkspaceCanvas } from '@/components/canvas/WorkspaceCanvas';
 import { CollaborationBar } from '@/components/workspace/CollaborationBar';
+import { WorkspaceAccessPanel } from '@/components/workspace/WorkspaceAccessPanel';
 import type { WebsocketProvider } from 'y-websocket';
 
 interface WorkspaceShellProps {
@@ -183,6 +184,7 @@ export function WorkspaceShell({ workspaceId }: WorkspaceShellProps) {
           readOnly={readOnly}
         />
       )}
+      {workspaceRole === 'owner' && <WorkspaceAccessPanel workspaceId={workspaceId} />}
       <div className="flex items-center gap-2 border-b border-border px-4 py-1 text-xs text-muted-foreground">
         <span className={`inline-block h-2 w-2 rounded-full ${syncColor}`} />
         <span>{syncLabel}</span>

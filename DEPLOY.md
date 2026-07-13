@@ -8,4 +8,22 @@ Production runs on [Render](https://dashboard.render.com/) from this repo’s `r
 | API | https://api.nexus.ehsanbayranvand.tech |
 | Relay | https://relay.nexus.ehsanbayranvand.tech |
 
-Sign in with `admin@ehsanbayranvand.tech` and the `ADMIN_PASSWORD` env var on the `nexus-orbit-gateway` service in Render.
+## Demo accounts
+
+Password for all seeded role accounts: `demo`
+
+| Email | Role |
+|-------|------|
+| `owner@orbit.local` | owner |
+| `editor@orbit.local` | editor |
+| `viewer@orbit.local` | viewer |
+
+Optional operator admin from Render env: `ADMIN_EMAIL` / `ADMIN_PASSWORD`.
+
+## Sharing
+
+Owners can create role-based invite URLs:
+
+`/join/{workspaceId}/{editor|viewer}/{token}`
+
+Regenerating a link for a role revokes the previous token.

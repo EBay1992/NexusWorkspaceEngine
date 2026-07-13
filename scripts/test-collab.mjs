@@ -8,10 +8,10 @@ import * as Y from 'yjs';
 import { WebsocketProvider } from 'y-websocket';
 
 const GATEWAY = process.env.GATEWAY_URL ?? 'http://localhost:5080';
-const WORKSPACE_ID = process.env.WORKSPACE_ID ?? 'demo';
+const WORKSPACE_ID = process.env.WORKSPACE_ID ?? 'main';
 
 const USERS = {
-  owner: { email: 'demo@orbit.local', password: 'demo' },
+  owner: { email: 'owner@orbit.local', password: 'demo' },
   editor: { email: 'editor@orbit.local', password: 'demo' },
   viewer: { email: 'viewer@orbit.local', password: 'demo' },
 };

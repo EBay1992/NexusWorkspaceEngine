@@ -32,20 +32,20 @@ export function CollaborationBar({
   const peers = useCollaborationPresence(syncProvider, localEmail);
   const [copied, setCopied] = useState(false);
 
-  const shareUrl =
+  const workspaceUrl =
     typeof window !== 'undefined'
       ? `${window.location.origin}/workspace/${encodeURIComponent(workspaceId)}`
       : `/workspace/${workspaceId}`;
 
-  const copyShareLink = useCallback(async () => {
+  const copyWorkspaceLink = useCallback(async () => {
     try {
-      await navigator.clipboard.writeText(shareUrl);
+      await navigator.clipboard.writeText(workspaceUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2_000);
     } catch {
       setCopied(false);
     }
-  }, [shareUrl]);
+  }, [workspaceUrl]);
 
   const remotePeers = peers.filter((peer) => !peer.isSelf);
 
@@ -55,7 +55,9 @@ export function CollaborationBar({
         <div className="min-w-0">
           <p className="font-medium truncate">{workspaceTitle ?? workspaceId}</p>
           <p className="text-muted-foreground">
-            Share the workspace link with teammates who have access.
+            {role === 'owner'
+              ? 'Use Access & sharing below for role-based invite URLs.'
+              : 'Ask an owner for a role-based invite if you need teammates.'}
           </p>
         </div>
 
@@ -70,8 +72,8 @@ export function CollaborationBar({
           {ROLE_LABEL[role]}
         </span>
 
-        <Button size="sm" variant="outline" onClick={() => void copyShareLink()}>
-          {copied ? 'Copied' : 'Copy invite link'}
+        <Button size="sm" variant="outline" onClick={() => void copyWorkspaceLink()}>
+          {copied ? 'Copied' : 'Copy workspace URL'}
         </Button>
 
         <div className="flex items-center gap-2">
