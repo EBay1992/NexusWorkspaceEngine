@@ -45,12 +45,11 @@ public static class ConnectionStringHelper
     private static NpgsqlConnectionStringBuilder EnsureSslDefaults(NpgsqlConnectionStringBuilder builder)
     {
         // Render Postgres requires SSL; free-tier cold starts need a longer timeout.
-        if (builder.SslMode == SslMode.Disable || builder.SslMode == SslMode.Prefer)
+        if (builder.SslMode is SslMode.Disable or SslMode.Prefer or SslMode.Allow)
         {
             builder.SslMode = SslMode.Require;
         }
 
-        builder.TrustServerCertificate = true;
         if (builder.Timeout < 30)
         {
             builder.Timeout = 30;
