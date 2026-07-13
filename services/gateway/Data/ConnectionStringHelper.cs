@@ -14,7 +14,7 @@ public static class ConnectionStringHelper
         if (!databaseUrl.StartsWith("postgres://", StringComparison.OrdinalIgnoreCase)
             && !databaseUrl.StartsWith("postgresql://", StringComparison.OrdinalIgnoreCase))
         {
-            return databaseUrl;
+            return EnsureSslDefaults(new NpgsqlConnectionStringBuilder(databaseUrl)).ConnectionString;
         }
 
         var uri = new Uri(databaseUrl);
@@ -39,6 +39,23 @@ public static class ConnectionStringHelper
             }
         }
 
-        return builder.ConnectionString;
+        return EnsureSslDefaults(builder).ConnectionString;
+    }
+
+    private static NpgsqlConnectionStringBuilder EnsureSslDefaults(NpgsqlConnectionStringBuilder builder)
+    {
+        // Render Postgres requires SSL; free-tier cold starts need a longer timeout.
+        if (builder.SslMode == SslMode.Disable || builder.SslMode == SslMode.Prefer)
+        {
+            builder.SslMode = SslMode.Require;
+        }
+
+        builder.TrustServerCertificate = true;
+        if (builder.Timeout < 30)
+        {
+            builder.Timeout = 30;
+        }
+
+        return builder;
     }
 }

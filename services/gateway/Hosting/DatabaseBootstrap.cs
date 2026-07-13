@@ -21,8 +21,8 @@ public sealed class DatabaseBootstrap(
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         var connectionString = ConnectionStringHelper.ToNpgsql(options.Value.DatabaseUrl);
-        await using var connection = new NpgsqlConnection(connectionString);
-        await connection.OpenAsync(cancellationToken);
+
+        await using var connection = await OpenWithRetryAsync(connectionString, cancellationToken);
 
         var schemaPath = Path.Combine(AppContext.BaseDirectory, "Sql", "schema.sql");
         if (File.Exists(schemaPath))
@@ -68,26 +68,93 @@ public sealed class DatabaseBootstrap(
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
+    private async Task<NpgsqlConnection> OpenWithRetryAsync(string connectionString, CancellationToken cancellationToken)
+    {
+        const int maxAttempts = 8;
+        Exception? last = null;
+
+        for (var attempt = 1; attempt <= maxAttempts; attempt++)
+        {
+            try
+            {
+                var connection = new NpgsqlConnection(connectionString);
+                await connection.OpenAsync(cancellationToken);
+                if (attempt > 1)
+                {
+                    logger.LogInformation("Connected to database on attempt {Attempt}", attempt);
+                }
+
+                return connection;
+            }
+            catch (Exception ex) when (ex is NpgsqlException or TimeoutException or OperationCanceledException)
+            {
+                last = ex;
+                logger.LogWarning(ex, "Database open attempt {Attempt}/{Max} failed", attempt, maxAttempts);
+                if (attempt == maxAttempts) break;
+                await Task.Delay(TimeSpan.FromSeconds(Math.Min(2 * attempt, 10)), cancellationToken);
+            }
+        }
+
+        throw new InvalidOperationException("Unable to open database connection after retries.", last);
+    }
+
     private static async Task UpsertUserMembershipAsync(
         NpgsqlConnection connection,
-        Guid userId,
+        Guid preferredId,
         string email,
         string password,
         string role,
         CancellationToken cancellationToken)
     {
+        // Resolve by email so we never collide with an older row using the preferred UUID.
+        var existingId = await connection.ExecuteScalarAsync<Guid?>(
+            new CommandDefinition(
+                "SELECT id FROM users WHERE email = @Email",
+                new { Email = email },
+                cancellationToken: cancellationToken));
+
+        var userId = existingId ?? preferredId;
+
+        if (existingId is null)
+        {
+            var idTaken = await connection.ExecuteScalarAsync<bool>(
+                new CommandDefinition(
+                    "SELECT EXISTS(SELECT 1 FROM users WHERE id = @Id)",
+                    new { Id = preferredId },
+                    cancellationToken: cancellationToken));
+            if (idTaken)
+            {
+                userId = Guid.NewGuid();
+            }
+
+            await connection.ExecuteAsync(
+                new CommandDefinition(
+                    """
+                    INSERT INTO users (id, email, password_hash)
+                    VALUES (@Id, @Email, @PasswordHash)
+                    """,
+                    new { Id = userId, Email = email, PasswordHash = password },
+                    cancellationToken: cancellationToken));
+        }
+        else
+        {
+            await connection.ExecuteAsync(
+                new CommandDefinition(
+                    """
+                    UPDATE users SET password_hash = @PasswordHash WHERE id = @Id
+                    """,
+                    new { Id = userId, PasswordHash = password },
+                    cancellationToken: cancellationToken));
+        }
+
         await connection.ExecuteAsync(
             new CommandDefinition(
                 """
-                INSERT INTO users (id, email, password_hash)
-                VALUES (@Id, @Email, @PasswordHash)
-                ON CONFLICT (email) DO UPDATE SET password_hash = EXCLUDED.password_hash;
-
                 INSERT INTO workspace_members (workspace_id, user_id, role)
                 VALUES ('main', @Id, @Role)
                 ON CONFLICT (workspace_id, user_id) DO UPDATE SET role = EXCLUDED.role;
                 """,
-                new { Id = userId, Email = email, PasswordHash = password, Role = role },
+                new { Id = userId, Role = role },
                 cancellationToken: cancellationToken));
     }
 }
