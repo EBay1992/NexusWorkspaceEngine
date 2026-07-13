@@ -168,7 +168,7 @@ export function BlockRenderer({
         isSelected ? 'border-primary ring-2 ring-primary/30' : 'border-border',
         isDragging && 'cursor-grabbing shadow-lg',
         isBlockedByDrag && 'pointer-events-none',
-        readOnly && 'cursor-default',
+        readOnly && 'cursor-default select-none',
         block.type === 'note' && 'bg-amber-50 dark:bg-amber-950/30',
       )}
       style={{
@@ -199,12 +199,12 @@ export function BlockRenderer({
         <span className="font-mono">{block.id.slice(0, 6)}</span>
       </div>
 
-      <div className="flex min-h-0 flex-1 p-2">
+      <div className={cn('flex min-h-0 flex-1 p-2', readOnly && 'pointer-events-none')}>
         <BlockEditor
           value={block.content}
           onChange={onContentChange}
           onFocus={onSelect}
-          isSelected={isSelected}
+          isSelected={isSelected && !readOnly}
           readOnly={readOnly}
         />
       </div>

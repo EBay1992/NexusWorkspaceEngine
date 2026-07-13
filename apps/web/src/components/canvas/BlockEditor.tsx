@@ -22,22 +22,29 @@ export function BlockEditor({ value, onChange, onFocus, isSelected, readOnly = f
       className={cn(
         'h-full w-full resize-none bg-transparent text-sm leading-relaxed outline-none',
         'placeholder:text-muted-foreground',
+        readOnly && 'caret-transparent cursor-default',
       )}
       value={displayedValue}
       readOnly={readOnly}
+      tabIndex={readOnly ? -1 : undefined}
       onChange={(e) => {
+        if (readOnly) return;
         const next = e.target.value;
         setEditingValue(next);
         debouncedChange.run(next);
       }}
       onBlur={() => {
+        if (readOnly) return;
         debouncedChange.flush();
         setEditingValue(null);
       }}
       onPointerDown={(e) => e.stopPropagation()}
-      onFocus={() => onFocus?.()}
-      placeholder="Type here…"
-      autoFocus={isSelected}
+      onFocus={() => {
+        if (readOnly) return;
+        onFocus?.();
+      }}
+      placeholder={readOnly ? undefined : 'Type here…'}
+      autoFocus={isSelected && !readOnly}
     />
   );
 }

@@ -146,8 +146,8 @@ function BlockItem({ id, readOnly }: { id: string; readOnly: boolean }) {
 
   const onSelect = useCallback(() => {
     setSelectedBlockId(id);
-    if (doc) bringBlockToFront(doc, id);
-  }, [doc, id, setSelectedBlockId]);
+    if (!readOnly && doc) bringBlockToFront(doc, id);
+  }, [doc, id, readOnly, setSelectedBlockId]);
 
   const commitPosition = useCallback(
     (x: number, y: number) => {
@@ -166,9 +166,9 @@ function BlockItem({ id, readOnly }: { id: string; readOnly: boolean }) {
   );
 
   const onBringToFront = useCallback(() => {
-    if (!doc) return;
+    if (readOnly || !doc) return;
     bringBlockToFront(doc, id);
-  }, [doc, id]);
+  }, [doc, id, readOnly]);
 
   const onMove = useThrottledCallback(commitPosition, 50);
   const onResize = useThrottledCallback(commitSize, 50);
