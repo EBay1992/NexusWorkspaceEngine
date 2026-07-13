@@ -27,7 +27,7 @@ services:
       - key: NEXT_PUBLIC_APP_URL
         value: https://nexus.ehsanbayranvand.tech
       - key: RELAY_WS_URL
-        value: wss://relay.nexus.ehsanbayranvand.tech/orbit
+        value: wss://nexus-orbit-relay.onrender.com/orbit
       - key: ADMIN_EMAIL
         value: admin@ehsanbayranvand.tech
       - key: ADMIN_PASSWORD
@@ -70,7 +70,7 @@ services:
       - key: NEXT_PUBLIC_GATEWAY_URL
         value: https://api.nexus.ehsanbayranvand.tech
       - key: NEXT_PUBLIC_RELAY_WS_URL
-        value: wss://relay.nexus.ehsanbayranvand.tech/orbit
+        value: wss://nexus-orbit-relay.onrender.com/orbit
       - key: NODE_ENV
         value: production
       - key: HOSTNAME
