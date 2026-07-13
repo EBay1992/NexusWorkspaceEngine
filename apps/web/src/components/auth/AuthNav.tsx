@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { useAuthStore } from '@/stores/auth-store';
 
 export function AuthNav() {
@@ -10,7 +11,13 @@ export function AuthNav() {
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
 
-  if (!user) return null;
+  if (!user) {
+    return (
+      <div className="ml-auto flex items-center gap-1">
+        <ThemeToggle />
+      </div>
+    );
+  }
 
   function handleLogout() {
     logout();
@@ -18,8 +25,9 @@ export function AuthNav() {
   }
 
   return (
-    <div className="ml-auto flex items-center gap-3">
+    <div className="ml-auto flex items-center gap-2 sm:gap-3">
       <span className="hidden text-xs text-muted-foreground sm:inline">{user.email}</span>
+      <ThemeToggle />
       <Link href="/workspaces">
         <Button variant="ghost" size="sm">
           Workspaces

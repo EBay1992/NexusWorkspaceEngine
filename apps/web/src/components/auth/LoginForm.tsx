@@ -32,7 +32,10 @@ export function LoginForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4">
+    <form
+      onSubmit={handleSubmit}
+      className="w-full max-w-sm space-y-4 rounded-2xl border border-border bg-card p-6 shadow-sm"
+    >
       <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
         <Input

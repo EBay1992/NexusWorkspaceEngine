@@ -123,7 +123,7 @@ export function WorkspaceCanvas({ readOnly = false }: WorkspaceCanvasProps) {
       </div>
 
       <div
-        className="relative flex-1 overflow-auto bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size-[20px_20px]"
+        className="relative flex-1 overflow-auto bg-background bg-[linear-gradient(to_right,var(--canvas-grid)_1px,transparent_1px),linear-gradient(to_bottom,var(--canvas-grid)_1px,transparent_1px)] bg-size-[20px_20px]"
         style={{ backgroundSize: `${GRID_CELL_PX}px ${GRID_CELL_PX}px` }}
         onPointerDown={handleCanvasPointerDown}
       >
